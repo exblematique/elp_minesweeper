@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+<body>
+    <div id="acceuil">
+    Numéro de partie: <input id="gameId" class="beforeStart" value="6"/><br/>
+    Pseudo: <input id="pseudo" class="beforeStart" value="pseudo"/><br/>
+    </div>
+    <button id="create" class="beforeStart">Créer un salon</button>
+    <button id="join" class="beforeStart">Rejoindre un salon</button>
+    <button id="stop" style="display:none">Annuler</button>
+    <ul id="playerList"></ul>
+    <script>    
+    /***************   Fonctions  *****************************/
+    function afficherJoueur() {
+        if (document.querySelector('#stop').style.display != 'none'){
+            $.ajax({
+                url: 'playerConnected.php',
+                method: "POST",
+                data: {gameId: document.querySelector("#gameId").value}
+            }).done(function(result) {
+                $('#playerList').html(result);
+            });
+            setTimeout("afficherJoueur()", 500);
+        }         
+    }
+    
+    /***** Fonction qui vérifie l'existence de la partie ou la créer   *********/
+    function verifGame(createdState){
+        dataAjax = {gameId: document.querySelector("#gameId").value,
+                    pseudo: document.querySelector("#pseudo").value};
+        if (createdState) dataAjax.create = true;
+        $.ajax({
+                url: "verifGame.php",
+                method: "POST",
+                data: dataAjax,
+                dataType: "text"
+            }).done(function(result) {
+                console.log("verifGame.php:  ." + result + ".");
+                if (result == "-1") alert("La partie n'existe pas");
+                else {
+                    $(".beforeStart").attr("disabled",true);
+                    dataAjax.create ? document.querySelector('#create').style.display = 'none'
+                                    : document.querySelector('#join').style.display = 'none';
+                    document.querySelector('#stop').style.display = 'inline';
+                    document.querySelector("#gameId").value = result;
+                    afficherJoueur();
+                }
+            }).fail(function(msgErr,status) {alert("Impossible de se connecter au serveur");});
+    }
+    
+    
+    /**************     Code     *******************************/
+    document.querySelector("#create").onclick = function(){
+        if (!document.querySelector("#pseudo").value)
+            alert("Le pseudo est vide");
+        else verifGame(true);
+    };
+
+    document.querySelector("#join").onclick = function(){
+        if (/\D/.test(document.querySelector("#gameId").value))
+            alert("Le numéro de partie est incorrect");
+        else if (!document.querySelector("#gameId").value)
+            alert("Le numéro de partie est vide");
+        else if (!document.querySelector("#pseudo").value)
+            alert("Le pseudo est vide");
+        else verifGame(false);
+    };
+
+    document.querySelector("#stop").onclick = function(){
+        $(".beforeStart").attr("disabled",false);
+        document.querySelector('#stop').style.display = 'none';
+        document.querySelector('#create').style.display = 'inline';
+        document.querySelector('#join').style.display = 'inline';
+        document.querySelector('#playerList').innerHTML = '';
+    };      
+        
+    </script>
+</body>
+</html>
