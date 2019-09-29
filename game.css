@@ -1,0 +1,10 @@
+table{
+    border-collapse: collapse;
+    border-spacing: 0px;
+}
+
+table tr td{
+    float: left;
+    height: 16px;
+    padding: 0px;
+}

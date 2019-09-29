@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="game.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+<body>
+    <div>Difficulté: 
+    &emsp;<label for='easy' >Facile </label>
+	<input type='radio' id='easy' name='difficult' value='9' />
+	&emsp;<label for='medium' >Moyen </label>
+	<input type='radio' id='medium' name='difficult' value='16' />
+    &emsp;<label for='hard' >Difficile </label>
+	<input type='radio' id='hard' name='difficult' value='30' />
+    <br/><br/>
+    Score actuel: <input id="score" value="0" disabled="disabled"/><br/>
+    Cases restantes: <input id="remindSquare" disabled="disabled"/><br/>
+    <button id='reset'>Recommencer</button>
+    <br/>
+    </div>
+    <table id="board"></table>
+    
+    <script>
+    //Creation d'un tableau lors du changement de difficulté
+    $('input').on("click", function(){
+        var xMax = this.value==30 ? 16 : this.value;
+        var yMax = this.value;
+        var board = document.querySelector('#board');
+
+        board.innerHTML = "";
+        
+        for (var x=0; x<xMax; x++){
+            var row = document.createElement("tr");
+            for (var y=0; y<yMax; y++){
+                var col = document.createElement("td");
+                var imgStatus = document.createElement("img");
+                imgStatus.id = "pos" + x + "_" + y;
+                imgStatus.xPosition=x;
+                imgStatus.yPosition=y;
+                imgStatus.src = "img/I.png";
+                imgStatus.difficult = this.value;
+                imgStatus.oncontextmenu = function(event) {
+                    //Désactive le click droit et ajoute la fonctionnalité drapeau
+                    if (this.src.indexOf("I.png") !== -1) this.src = "img/F.png";
+                    else if (this.src.indexOf("F.png") !== -1) this.src = "img/Q.png";
+                    else if (this.src.indexOf("Q.png") !== -1) this.src = "img/I.png";
+                    return false;
+                };
+                imgStatus.onclick = function onImg(){
+                    if (/I.png/.test(this.src)){
+                        console.log("OnClick "+ this.xPosition + "_" + this.yPosition +" start");
+                        $.ajax({
+                            url: "verifMaps.php",
+                            method: "POST",
+                            data: {x: this.xPosition, y: this.yPosition, difficult: this.difficult},
+                            dataType: "json"
+                        }).done(function(result) {
+                            console.info(result);
+                            if (result.initSquare<0){
+                                alert("You lose !");
+                            } else {
+                                for (var i=0; i<result.initSquare; i++){
+                                    var square = document.querySelector("#pos" + result.newValues[i].x + "_" + result.newValues[i].y);
+                                    square.src = "img/" + result.newValues[i].z + ".png";
+                                }
+                            }
+                            document.querySelector('#score').value = result.score;
+                            document.querySelector('#remindSquare').value = result.remindSquare;
+                            this.src = "img/" + result.initSquare + ".png";
+                        }).fail(function(msgErr,status) {console.info("FAIL! Msg: "+msgErr + " Status: "+ status);});
+                    }
+                };
+                col.appendChild(imgStatus);
+                row.appendChild(col);
+            }
+            board.appendChild(row);
+        }
+    });
+    
+    document.querySelector('#reset').onclick = function onRst(){
+        $.ajax({
+                url: "verifMaps.php",
+                method: "POST",
+                data: {reset: true}
+        }).done(function(result) {
+            document.querySelector('input:radio.checked').onclick();
+        }).fail(function(msgErr,status) {onRst();})
+    };
+        
+    
+    </script>
+</body>
+</html>

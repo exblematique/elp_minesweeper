@@ -10,9 +10,11 @@
     Pseudo: <input id="pseudo" class="beforeStart" value="pseudo"/><br/>
     </div>
     <button id="create" class="beforeStart">Créer un salon</button>
+    <button id="start" style="display:none">Démarrer la partie</button>
     <button id="join" class="beforeStart">Rejoindre un salon</button>
     <button id="stop" style="display:none">Annuler</button>
     <ul id="playerList"></ul>
+    <div id='game'></div>
     <script>    
     /***************   Fonctions  *****************************/
     function afficherJoueur() {
@@ -22,6 +24,7 @@
                 method: "POST",
                 data: {gameId: document.querySelector("#gameId").value}
             }).done(function(result) {
+                if (!result) document.location.href="game.html";
                 $('#playerList').html(result);
             });
             setTimeout("afficherJoueur()", 500);
@@ -57,7 +60,11 @@
     document.querySelector("#create").onclick = function(){
         if (!document.querySelector("#pseudo").value)
             alert("Le pseudo est vide");
-        else verifGame(true);
+        else {
+            verifGame(true);
+            document.querySelector('#start').style.display = 'inline';
+            
+        }
     };
 
     document.querySelector("#join").onclick = function(){
@@ -73,10 +80,15 @@
     document.querySelector("#stop").onclick = function(){
         $(".beforeStart").attr("disabled",false);
         document.querySelector('#stop').style.display = 'none';
+        document.querySelector('#start').style.display = 'none';
         document.querySelector('#create').style.display = 'inline';
         document.querySelector('#join').style.display = 'inline';
         document.querySelector('#playerList').innerHTML = '';
-    };      
+    };
+    
+    document.querySelector("#start").onclick = function(){
+        document.location.href="game.html";
+    }
         
     </script>
 </body>
