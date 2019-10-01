@@ -15,7 +15,7 @@ if($_POST["create"]) {
                         `add_score` INT NOT NULL DEFAULT 1,
                         `current_map` INT DEFAULT 0,
                         `squares_remind` INT DEFAULT 0,
-                        `player_map` VARCHAR(480) DEFAULT '0',
+                        `player_map` VARCHAR(600) DEFAULT '0',
 						PRIMARY KEY (`id`)) ;";
     $pdo->query($sql);
 } else {

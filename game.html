@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
     <meta charset="utf-8">
+    <title>Démineur de l'ELP - Partie </title>
     <link rel="stylesheet" type="text/css" href="game.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 </head>
@@ -22,17 +23,21 @@
     <table id="board"></table>
     
     <script>
+    
+    gameId=/gameId=(\d)+$/.exec(document.cookie)[0];
+    gameId = gameId.replace(/gameId=/, '');
+    document.querySelector('title').text += gameId;
     //Creation d'un tableau lors du changement de difficulté
     $('input').on("click", function(){
-        var xMax = this.value==30 ? 16 : this.value;
-        var yMax = this.value;
+        var xMax = this.value;
+        var yMax = this.value==30 ? 16 : this.value;
         var board = document.querySelector('#board');
 
         board.innerHTML = "";
         
-        for (var x=0; x<xMax; x++){
+        for (var y=0; y<yMax; y++){
             var row = document.createElement("tr");
-            for (var y=0; y<yMax; y++){
+            for (var x=0; x<xMax; x++){
                 var col = document.createElement("td");
                 var imgStatus = document.createElement("img");
                 imgStatus.id = "pos" + x + "_" + y;
@@ -49,7 +54,7 @@
                 };
                 imgStatus.onclick = function onImg(){
                     if (/I.png/.test(this.src)){
-                        console.log("OnClick "+ this.xPosition + "_" + this.yPosition +" start");
+                        console.log("OnClick "+ this.xPosition + "_" + this.yPosition +" difficulty= " + this.difficult);
                         $.ajax({
                             url: "verifMaps.php",
                             method: "POST",
@@ -57,13 +62,19 @@
                             dataType: "json"
                         }).done(function(result) {
                             console.info(result);
-                            if (result.initSquare<0){
-                                alert("You lose !");
-                            } else {
-                                for (var i=0; i<result.initSquare; i++){
-                                    var square = document.querySelector("#pos" + result.newValues[i].x + "_" + result.newValues[i].y);
-                                    square.src = "img/" + result.newValues[i].z + ".png";
-                                }
+                            switch (result.initSquare){
+                                case -1:
+                                    alert("You lose !");
+                                    break;
+                                case -2:
+                                    alert("Bravo " + result.pseudo + ", tu as gagné et en plus tu as de jolis yeux !");
+                                    break;
+                                default:
+                                    for (var i=0; i<result.initSquare; i++){
+                                        var square = document.querySelector("#pos" + result.newValues[i].x + "_" + result.newValues[i].y);
+                                        square.src = "img/" + result.newValues[i].z + ".png";
+                                    }
+                                    break;
                             }
                             document.querySelector('#score').value = result.score;
                             document.querySelector('#remindSquare').value = result.remindSquare;

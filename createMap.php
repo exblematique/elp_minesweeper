@@ -1,11 +1,11 @@
 <?php
 ////// Variables globales
-switch ($_GET['difficult']){
-    case 16:
+switch ($_POST['difficult']){
+    case "16":
         $n = array(16, 16);     //Nombre de colonnes et lignes
         $b = 40;                //Nombre de bombes
         break;
-    case 30:
+    case "30":
         $n = array(30, 16);
         $b = 99;
         break;
@@ -18,7 +18,7 @@ switch ($_GET['difficult']){
 
 $GLOBALS['$mapMines'] = "";     //Contient la positions des mines ou le nombre à proximité
 $GLOBALS['$casesRestantes'] = 0;
-$coord = array($_GET['x'], $_GET['y']);
+$coord = array($_POST['x'], $_POST['y']);
 creationGrille($coord, $n, $b);
 
 
@@ -47,8 +47,8 @@ on la mélange, et on renvoie les b-premiers éléments
 
 function creationGrille($coord, $n, $b){
     $M = bombes($coord, $n, $b);
-    for($x=0; $x<$n[0]; $x++){
-        for($y=0; $y<$n[1]; $y++){
+    for($y=0; $y<$n[1]; $y++){
+        for($x=0; $x<$n[0]; $x++){
             if (IsMine($x,$y,$M)) $GLOBALS['$mapMines'] .= '-';
             else $GLOBALS['$mapMines'] .= NbMines($x,$y,$M);
         }
