@@ -7,87 +7,145 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 </head>
 <body>
-    <div>Difficulté: 
-    &emsp;<label for='easy' >Facile </label>
-	<input type='radio' id='easy' name='difficult' value='9' />
-	&emsp;<label for='medium' >Moyen </label>
-	<input type='radio' id='medium' name='difficult' value='16' />
-    &emsp;<label for='hard' >Difficile </label>
-	<input type='radio' id='hard' name='difficult' value='30' />
-    <br/><br/>
-    Score actuel: <input id="score" value="0" disabled="disabled"/><br/>
-    Cases restantes: <input id="remindSquare" disabled="disabled"/><br/>
-    <button id='reset'>Recommencer</button>
-    <br/>
-    </div>
+<header>
+<div id="difficult">
+    <div>DIFFICULTÉ</div>
+    <a id="easy" value="9">Facile</a>
+    <a id="medium" value="16">Moyen</a>
+    <a id="hard" value="30">Difficile</a>
+</div>
+<div id="score">SCORE ACTUEL : 0</div>
+<div id="remindSquare">CASES RESTANTES : 0</div>
+<button id='reset' disabled='true'>Recommencer</button>
+    
+</header>
     <table id="board"></table>
-    
+    <table id="leaderboard"></table>
     <script>
+    /******* FUNCTIONS *********/
+    //Charge le leaderboard
+    function leaderboard() {
+        $.ajax({
+            url: 'leaderboard.php'
+        }).done(function(result) {
+            $('#leaderboard').html(result);
+        });
+        setTimeout("leaderboard()", 500);
+    }         
     
-    gameId=/gameId=(\d)+$/.exec(document.cookie)[0];
+    
+    gameId=/gameId=(\d)+/.exec(document.cookie)[0];
     gameId = gameId.replace(/gameId=/, '');
     document.querySelector('title').text += gameId;
+    leaderboard();
+    
     //Creation d'un tableau lors du changement de difficulté
-    $('input').on("click", function(){
-        var xMax = this.value;
-        var yMax = this.value==30 ? 16 : this.value;
-        var board = document.querySelector('#board');
-
-        board.innerHTML = "";
-        
-        for (var y=0; y<yMax; y++){
-            var row = document.createElement("tr");
-            for (var x=0; x<xMax; x++){
-                var col = document.createElement("td");
-                var imgStatus = document.createElement("img");
-                imgStatus.id = "pos" + x + "_" + y;
-                imgStatus.xPosition=x;
-                imgStatus.yPosition=y;
-                imgStatus.src = "img/I.png";
-                imgStatus.difficult = this.value;
-                imgStatus.oncontextmenu = function(event) {
-                    //Désactive le click droit et ajoute la fonctionnalité drapeau
-                    if (this.src.indexOf("I.png") !== -1) this.src = "img/F.png";
-                    else if (this.src.indexOf("F.png") !== -1) this.src = "img/Q.png";
-                    else if (this.src.indexOf("Q.png") !== -1) this.src = "img/I.png";
-                    return false;
-                };
-                imgStatus.onclick = function onImg(){
-                    if (/I.png/.test(this.src)){
-                        console.log("OnClick "+ this.xPosition + "_" + this.yPosition +" difficulty= " + this.difficult);
-                        $.ajax({
-                            url: "verifMaps.php",
-                            method: "POST",
-                            data: {x: this.xPosition, y: this.yPosition, difficult: this.difficult},
-                            dataType: "json"
-                        }).done(function(result) {
-                            console.info(result);
-                            switch (result.initSquare){
-                                case -1:
-                                    alert("You lose !");
-                                    break;
-                                case -2:
-                                    alert("Bravo " + result.pseudo + ", tu as gagné et en plus tu as de jolis yeux !");
-                                    break;
-                                default:
-                                    for (var i=0; i<result.initSquare; i++){
-                                        var square = document.querySelector("#pos" + result.newValues[i].x + "_" + result.newValues[i].y);
-                                        square.src = "img/" + result.newValues[i].z + ".png";
-                                    }
-                                    break;
-                            }
-                            document.querySelector('#score').value = result.score;
-                            document.querySelector('#remindSquare').value = result.remindSquare;
-                            this.src = "img/" + result.initSquare + ".png";
-                        }).fail(function(msgErr,status) {console.info("FAIL! Msg: "+msgErr + " Status: "+ status);});
-                    }
-                };
-                col.appendChild(imgStatus);
-                row.appendChild(col);
+    var inputs = document.querySelectorAll('#difficult a');
+    for (var i=0; i<inputs.length; i++){
+        inputs[i].onclick = function(){
+            switch(this.id){
+                case "easy":
+                    var xMax = 9;
+                    var yMax = 9;
+                    break;
+                case "medium":
+                    var xMax = 16;
+                    var yMax = 16;
+                    break;
+                case "hard":
+                    var xMax = 30;
+                    var yMax = 16;
+                    break;
             }
-            board.appendChild(row);
-        }
-    });
+            document.difficult = xMax;
+            
+            //Changement de valeur de l'input et blocage du bouton reset
+            var inputs = document.querySelectorAll('#difficult a');
+            for (var i=0; i<inputs.length; i++) inputs[i].className = "";
+            this.className = "checked";
+            document.querySelector("#reset").disabled = false;
+            
+            //Demande de nouvelle map
+            $.ajax({
+                url: "verifMaps.php",
+                method: "POST",
+                data: {reset: true}
+            });
+            
+            var board = document.querySelector('#board');
+            board.innerHTML = "";
+            for (var y=0; y<yMax; y++){
+                var row = document.createElement("tr");
+                for (var x=0; x<xMax; x++){
+                    var col = document.createElement("td");
+                    var imgStatus = document.createElement("img");
+                    imgStatus.id = "pos" + x + "_" + y;
+                    imgStatus.xPosition=x;
+                    imgStatus.yPosition=y;
+                    imgStatus.src = "img/I.png";
+                    imgStatus.difficult = xMax;
+                    imgStatus.oncontextmenu = function(event) {
+                        //Désactive le click droit et ajoute la fonctionnalité drapeau
+                        if (this.src.indexOf("I.png") !== -1) this.src = "img/F.png";
+                        else if (this.src.indexOf("F.png") !== -1) this.src = "img/Q.png";
+                        else if (this.src.indexOf("Q.png") !== -1) this.src = "img/I.png";
+                        return false;
+                    };
+                    imgStatus.onclick = function onImg(){
+                        if (/I.png/.test(this.src)){
+                            console.log("OnClick "+ this.xPosition + "_" + this.yPosition +" difficulty= " + this.difficult);
+                            $.ajax({
+                                url: "verifMaps.php",
+                                method: "POST",
+                                data: {x: this.xPosition, y: this.yPosition, difficult: this.difficult},
+                                dataType: "json"
+                            }).done(function(result) {
+                                console.info(result);
+                                switch (result.initSquare){
+                                    case -1:    //Quand on a perdu 
+                                        for (var i=0; i<result.newValues.length; i++){
+                                            var square = document.querySelector("#pos" + result.newValues[i].x + "_" + result.newValues[i].y);
+                                            square.oncontextmenu = function(){return false;};
+                                            if (result.newValues[i].z == "-"){
+                                                if (/[IQ].png/.test(square.src)) square.src = "img/M.png";
+                                            } else {
+                                                /F.png/.test(square.src) ? square.src = "img/NM.png" : square.onclick = function(){};
+                                            }    
+                                        }
+                                        this.src = "img/RM.png"
+                                        alert("You lose !");
+                                        break;
+                                    case -2:    //Quand on a gagné
+                                        for (var i=0; i<result.newValues.length; i++){
+                                            var square = document.querySelector("#pos" + result.newValues[i].x + "_" + result.newValues[i].y);
+                                            if (result.newValues[i].z == "-") {
+                                                square.oncontextmenu = function(event) {return false};
+                                                square.src = "img/F.png"
+                                            }
+                                            else square.src = "img/" + result.newValues[i].z + ".png";
+                                        }
+                                        alert("Bravo " + result.pseudo + ", tu as gagné et en plus tu as de jolis yeux !");
+                                        break;
+                                    default:    //Partie en cours
+                                        for (var i=0; i<result.initSquare; i++){
+                                            var square = document.querySelector("#pos" + result.newValues[i].x + "_" + result.newValues[i].y);
+                                            square.src = "img/" + result.newValues[i].z + ".png";
+                                        }
+                                        break;
+                                }
+                                document.querySelector('#score').innerHTML = "SCORE ACTUEL : " + result.score;
+                                document.querySelector('#remindSquare').innerHTML = "CASES RESTANTES : " + result.remindSquare;
+                                this.src = "img/" + result.initSquare + ".png";
+                            }).fail(function(msgErr,status) {console.info("FAIL! Msg: "+msgErr + " Status: "+ status);});
+                        }
+                    };
+                    col.appendChild(imgStatus);
+                    row.appendChild(col);
+                }
+                board.appendChild(row);
+            }
+        };
+    }
     
     document.querySelector('#reset').onclick = function onRst(){
         $.ajax({
@@ -95,8 +153,12 @@
                 method: "POST",
                 data: {reset: true}
         }).done(function(result) {
-            document.querySelector('input:radio.checked').onclick();
-        }).fail(function(msgErr,status) {onRst();})
+            document.querySelector('#board').innerHTML= "";
+            //Reinitialisation de la difficulté et blocage du bouton reset
+            var inputs = document.querySelectorAll('#difficult a');
+            for (var i=0; i<inputs.length; i++) inputs[i].className = "";
+            document.querySelector("#reset").disabled = true;
+        })
     };
         
     

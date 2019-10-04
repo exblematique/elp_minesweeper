@@ -3,8 +3,9 @@ $pdo = new PDO("mysql:host=mysql-elp.alwaysdata.net;dbname=elp_demineur", "elp",
 
 if ($_POST['reset']){
     echo 'reset';
-    $currentMap = $pdo->query("SELECT current_map FROM game_".$_COOKIE["gameId"]." WHERE id=".$_COOKIE["playerId"]);
-    $pdo->query("UPDATE game_".$_COOKIE["gameId"]." SET current_map=". $currentMap+1 ." WHERE id=".$_COOKIE["playerId"]);
+    $currentMap = $pdo->query("SELECT current_map FROM game_".$_COOKIE["gameId"]." WHERE id=".$_COOKIE["playerId"])->fetch()[0];
+    $currentMap++;
+    $pdo->query("UPDATE game_".$_COOKIE["gameId"]." SET current_map=". $currentMap ." WHERE id=".$_COOKIE["playerId"]);
     exit(0);
 }
 
@@ -22,12 +23,8 @@ switch ($_POST['difficult']){
         $b = 10;
         break; 
 }
-
-//Créer la partie lorsque le joueur host la démarre
-$gameFolder = "./games/".$_COOKIE["gameId"];
-if (!is_dir($gameFolder) && $_COOKIE["playerId"]=="1") mkdir($gameFolder);
-
 //Vérifie si le joueur possède une carte déjà active sinon la créer
+$gameFolder = "./games/".$_COOKIE["gameId"];
 $currentMap = $pdo->query("SELECT current_map FROM game_".$_COOKIE["gameId"]." WHERE id=".$_COOKIE["playerId"])->fetch()[0];
 $gameFile = $gameFolder."/".$currentMap.".".$_COOKIE["playerId"];
 
@@ -41,9 +38,8 @@ if (file_exists($gameFile)){
     $GLOBALS['$addScore'] = $pdo->query("SELECT add_score FROM game_".$_COOKIE["gameId"]." WHERE id=".$_COOKIE["playerId"])->fetch()[0];
 } else {
     include('createMap.php');
-    
     //Enregiste la nouvelle map dans un fichier
-    $fdGame = fopen($gameFile, 'x+');
+    $fdGame = fopen($gameFile, 'x');
     fputs($fdGame, $GLOBALS['$mapMines']);
     fclose($fdGame);
     
@@ -70,7 +66,7 @@ function decouverte($x, $y, $n){
     if ($GLOBALS['$playerMap'][$currentSquare] == '0'){
         $GLOBALS['$playerMap'][$currentSquare] = '1';
         $GLOBALS['$count']++;
-        $GLOBALS['$out'] .= '{"x":'.$x.', "y":'.$y.', "z": '.$GLOBALS['$mapMines'][$currentSquare].'}, ';
+        $GLOBALS['$out'] .= '{"x":'.$x.', "y":'.$y.', "z":'.$GLOBALS['$mapMines'][$currentSquare].'}, ';
         $GLOBALS['$casesRestantes'] -= 1;
         $GLOBALS['$score'] += $GLOBALS['$addScore']++;
             //S'il y a pas de mine à proximité on débloque les cases environnantes avec sécurité de sortie de tableau
@@ -127,6 +123,13 @@ if (!$GLOBALS['$casesRestantes']) {
         ');
     $currentMap = $pdo->query("SELECT current_map FROM game_".$_COOKIE["gameId"]." WHERE id=".$_COOKIE["playerId"])->fetch()[0] +1;
     $pdo->query("UPDATE game_".$_COOKIE["gameId"]." SET current_map=". $currentMap ." WHERE id=".$_COOKIE["playerId"]);
+    $GLOBALS['$out'] .= ', ';
+    for ($x=0; $x<$n[0]; $x++){
+        for ($y=0; $y<$n[1]; $y++){
+            if ($GLOBALS['$mapMines'][$x+$y*$n[0]] == '-') $GLOBALS['$out'] .= '{"x":'.$x.', "y":'.$y.', "z":"-"}, ';
+        }
+    }
+    $GLOBALS['$out'] = rtrim($GLOBALS['$out'], ", ");
 }
 echo('"newValues":'.$GLOBALS['$out'].']}');
 

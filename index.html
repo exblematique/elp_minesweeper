@@ -88,7 +88,7 @@
     };
     
     document.querySelector("#start").onclick = function(){
-        document.location.href="game.html";
+        $.ajax({url: "startGame.php"}).done(function(result){document.location.href="game.html";});
     }
         
     </script>

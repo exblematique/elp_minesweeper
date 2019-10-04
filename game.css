@@ -1,10 +1,93 @@
-table{
-    border-collapse: collapse;
-    border-spacing: 0px;
+header *{
+    margin: 0;
+    padding: 0;
+    text-align: center;
 }
 
-table tr td{
+header div{
+    width: 100%;
+    display: inline-block;
+    background-color: #DDDDDD;
+
+}
+
+header div:nth-child(even){
+    background-color: #EEEEEE;
+}
+
+header div *{
+    height: 100%;
+    display: inline-block;
+}
+
+
+table#board{
+    border-spacing: 0;
+    display: table;
+    margin: 0 auto;
+    border: 0;
+    padding: 10px 0;
+
+}
+
+table#board tr td{
     float: left;
     height: 16px;
-    padding: 0px;
+    width: 16px;
+    padding: 0;
+}
+
+table#leaderboard{
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+  text-align: center;
+  padding: 8px;
+}
+
+tr:nth-child(even){
+    background-color: #f2f2f2;
+}
+
+th {
+  background-color: #4CAF50;
+  color: white;
+}
+
+div#difficult *{
+    width: 24%;
+}
+    
+a#easy{
+	background: #DDEEDD;
+}
+
+a#medium{
+	background: #FFEEDD;
+}
+
+a#hard{
+	background: #FADDDD;
+}
+
+
+a#easy.checked{
+	background:green;
+}
+
+a#medium.checked{
+	background:orange;
+}
+
+a#hard.checked{
+	background:red;
+}
+
+
+button#reset{
+	margin: 0 auto;
+	display: table;
+    width: 100%;
 }
