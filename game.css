@@ -42,6 +42,10 @@ table#leaderboard{
     width: 100%;
 }
 
+tr#me{
+    background-color: #FFFF99;
+}
+
 th, td {
   text-align: center;
   padding: 8px;

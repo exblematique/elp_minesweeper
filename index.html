@@ -3,29 +3,47 @@
 <head>
     <meta charset="utf-8">
     <title>Démineur de l'ELP</title>
+    <link rel="stylesheet" type="text/css" href="index.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 </head>
 <body>
     <div id="acceuil">
-    Numéro de partie: <input id="gameId" class="beforeStart" value="6"/><br/>
-    Pseudo: <input id="pseudo" class="beforeStart" value="pseudo"/><br/>
+        Numéro de partie: <input id="gameId" value="6"/><br/>
+        Pseudo: <input id="pseudo" value="pseudo"/><br/>
+        <button id="create">Créer un salon</button>
+        <button id="join">Rejoindre un salon</button>
     </div>
-    <button id="create" class="beforeStart">Créer un salon</button>
-    <button id="start" style="display:none">Démarrer la partie</button>
-    <button id="join" class="beforeStart">Rejoindre un salon</button>
-    <button id="stop" style="display:none">Annuler</button>
+    <div id="create" class="noDisplay">
+        Temps de la partie: <input type="number" id="time" value="2" min="1" max="59"/> minutes<br/>
+        <select id="gameMode" name="gameMode" form="gameMode">
+            <option value="different">Chacun choisi sa carte</option>
+            <option value="same">Tout le monde possède la même carte</option>
+        </select>
+        <div id="different"></div>
+        <div id="same" class="noDisplay">
+            Nombre de lignes: <input type="number" id="difficultY" value="9" min="9" max="100"/><br/>
+            Nombre de colonnes: <input type="number" id="difficultX" value="9"  min="9" max="100"/><br/>
+            Nombre de bombes: <input type="number" id="mines" value="10" value="9"  min="10" max="800"/><br/>
+        </div>
+        <button id="start">Démarrer la partie</button>
+    </div>
+    
+    <button id="stop" class="noDisplay">Annuler</button>
     <ul id="playerList"></ul>
-    <div id='game'></div>
-    <script>    
-    /***************   Fonctions  *****************************/
+    <div id="game"></div>
+    <script>
+    /**************************************************************/
+    /*******************   Fonctions  *****************************/
+    /**************************************************************/
+    // Affiche le tableau des joueurs connectés
     function afficherJoueur() {
-        if (document.querySelector('#stop').style.display != 'none'){
+        if (document.querySelector('#stop').className != 'noDisplay'){
             $.ajax({
                 url: 'playerConnected.php',
                 method: "POST",
                 data: {gameId: document.querySelector("#gameId").value}
             }).done(function(result) {
-                if (!result) document.location.href="game.html";
+                if (!isNaN(result)) document.location.href="game.html?time=" + result*60;
                 $('#playerList').html(result);
             });
             setTimeout("afficherJoueur()", 500);
@@ -46,27 +64,45 @@
                 console.log("verifGame.php:  ." + result + ".");
                 if (result == "-1") alert("La partie n'existe pas");
                 else {
-                    $(".beforeStart").attr("disabled",true);
-                    dataAjax.create ? document.querySelector('#create').style.display = 'none'
-                                    : document.querySelector('#join').style.display = 'none';
-                    document.querySelector('#stop').style.display = 'inline';
+                    activeAccueil(false);
+                    dataAjax.create ? document.querySelector('button#join').className = 'noDisplay'
+                                    : document.querySelector('button#create').className = 'noDisplay';
+                    document.querySelector('#stop').className = '';
                     document.querySelector("#gameId").value = result;
                     afficherJoueur();
                 }
             }).fail(function(msgErr,status) {alert("Impossible de se connecter au serveur");});
     }
     
+    //Désactive ou active les inputs de la pages d'accueil
+    function activeAccueil(activeBool){
+        var objects = document.querySelectorAll('#acceuil input, #acceuil button');
+        for (var i=0; i<objects.length; i++) {
+            objects[i].disabled = !activeBool;
+            if (activeBool) objects[i].className = "";
+        }
+    }
     
-    /**************     Code     *******************************/
+    /**************************************************************/
+    /***********************     Code     *************************/
+    /**************************************************************/
     document.querySelector("#create").onclick = function(){
         if (!document.querySelector("#pseudo").value)
             alert("Le pseudo est vide");
         else {
             verifGame(true);
-            document.querySelector('#start').style.display = 'inline';
-            
+            document.querySelector("div#create").className = "";
+            document.querySelector("#join").className = "noDisplay";
         }
     };
+    
+    document.querySelector("#gameMode").onclick = function(){
+        var objects = document.querySelectorAll("#create div");
+        for (var i=0; i<objects.length; i++) {
+            objects[i].className = "noDisplay";
+        }
+        document.querySelector("#" + this.value).className = "";
+    }
 
     document.querySelector("#join").onclick = function(){
         if (/\D/.test(document.querySelector("#gameId").value))
@@ -79,16 +115,25 @@
     };
 
     document.querySelector("#stop").onclick = function(){
-        $(".beforeStart").attr("disabled",false);
-        document.querySelector('#stop').style.display = 'none';
-        document.querySelector('#start').style.display = 'none';
-        document.querySelector('#create').style.display = 'inline';
-        document.querySelector('#join').style.display = 'inline';
+        document.querySelector('#stop').className = 'noDisplay';
+        document.querySelector('div#create').className = 'noDisplay';
+        document.querySelector('#join').className = '';
+        activeAccueil(true);
         document.querySelector('#playerList').innerHTML = '';
     };
     
     document.querySelector("#start").onclick = function(){
-        $.ajax({url: "startGame.php"}).done(function(result){document.location.href="game.html";});
+        var mode = document.querySelector("#gameMode").value;
+        var time = document.querySelector("#time").value;
+        var data = {mode: mode, time: time}
+        switch (mode){
+            case "same":
+                data.difficultX = document.querySelector("#difficultX").value;
+                data.difficultY = document.querySelector("#difficultY").value;
+                data.mines = document.querySelector("#mines").value;
+                break;
+        }
+        $.post("startGame.php", data).done(function(result){});
     }
         
     </script>

@@ -1,28 +1,37 @@
 <?php
 $pdo = new PDO("mysql:host=mysql-elp.alwaysdata.net;dbname=elp_demineur", "elp", "Esaip49");
 
-if ($_POST['reset']){
-    echo 'reset';
-    $currentMap = $pdo->query("SELECT current_map FROM game_".$_COOKIE["gameId"]." WHERE id=".$_COOKIE["playerId"])->fetch()[0];
-    $currentMap++;
-    $pdo->query("UPDATE game_".$_COOKIE["gameId"]." SET current_map=". $currentMap ." WHERE id=".$_COOKIE["playerId"]);
-    exit(0);
-}
-
+//Défini la difficulté
 switch ($_POST['difficult']){
-    case "16":
+    case "easy":
+        $n = array(9, 9);
+        $b = 10;
+        break; 
+    case "medium":
         $n = array(16, 16);     //Nombre de colonnes et lignes
         $b = 40;                //Nombre de bombes
         break;
-    case "30":
+    case "hard":
         $n = array(30, 16);
         $b = 99;
         break;
     default:
-        $n = array(9, 9);
-        $b = 10;
+        $settings = $pdo->query("SELECT difficult_x, difficult_y, mines FROM games WHERE id=".$_COOKIE["gameId"])->fetch();
+        $n = array($settings[0], $settings[1]);
+        $b = $settings[2];
         break; 
 }
+
+
+if ($_POST['reset']){
+    $currentMap = $pdo->query("SELECT current_map FROM game_".$_COOKIE["gameId"]." WHERE id=".$_COOKIE["playerId"])->fetch()[0];
+    $currentMap++;
+    $pdo->query("UPDATE game_".$_COOKIE["gameId"]." SET current_map=". $currentMap ." WHERE id=".$_COOKIE["playerId"]);
+    echo '{"difficult": ['.$n[0].','.$n[1].']}';
+    exit(0);
+}
+
+
 //Vérifie si le joueur possède une carte déjà active sinon la créer
 $gameFolder = "./games/".$_COOKIE["gameId"];
 $currentMap = $pdo->query("SELECT current_map FROM game_".$_COOKIE["gameId"]." WHERE id=".$_COOKIE["playerId"])->fetch()[0];

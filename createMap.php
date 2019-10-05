@@ -1,21 +1,5 @@
 <?php
 ////// Variables globales
-switch ($_POST['difficult']){
-    case "16":
-        $n = array(16, 16);     //Nombre de colonnes et lignes
-        $b = 40;                //Nombre de bombes
-        break;
-    case "30":
-        $n = array(30, 16);
-        $b = 99;
-        break;
-    default:
-        $n = array(9, 9);
-        $b = 10;
-        break;
-        
-}
-
 $GLOBALS['$mapMines'] = "";     //Contient la positions des mines ou le nombre à proximité
 $GLOBALS['$casesRestantes'] = 0;
 $coord = array($_POST['x'], $_POST['y']);
