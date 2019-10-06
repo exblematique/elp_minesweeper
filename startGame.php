@@ -1,5 +1,5 @@
 <?php
-$pdo = new PDO("mysql:host=mysql-elp.alwaysdata.net;dbname=elp_demineur", "elp", "Esaip49");
+include('pdo');
 
 //Créer la partie lorsque le joueur host la démarre
 $gameFolder = "./games/".$_COOKIE["gameId"];

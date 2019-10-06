@@ -43,8 +43,8 @@
                 method: "POST",
                 data: {gameId: document.querySelector("#gameId").value}
             }).done(function(result) {
-                if (!isNaN(result)) document.location.href="game.html?time=" + result*60;
-                $('#playerList').html(result);
+                if (!isNaN(result)) document.location.href="game.php?time=" + result*60;
+                document.querySelector('#playerList').innerHTML = result;
             });
             setTimeout("afficherJoueur()", 500);
         }         

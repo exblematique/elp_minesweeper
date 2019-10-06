@@ -8,16 +8,26 @@
 </head>
 <body>
 <header>
+<div id="score">SCORE ACTUEL : 0</div>
+<div id="remindSquare">CASES RESTANTES : 0</div>
+<div id="remindTime">TEMPS RESTANT :</div>
+<button id='reset' disabled='true'>Recommencer</button>
+<?php
+include('pdo');
+$game_mode = $pdo->query('SELECT game_mode FROM games WHERE id='.$_COOKIE["gameId"])->fetch()[0];
+switch ($game_mode){
+    case "different":
+?>
 <div id="difficult">
     <div>DIFFICULTÉ</div>
     <a id="easy" value="9">Facile</a>
     <a id="medium" value="16">Moyen</a>
     <a id="hard" value="30">Difficile</a>
 </div>
-<div id="score">SCORE ACTUEL : 0</div>
-<div id="remindSquare">CASES RESTANTES : 0</div>
-<div id="remindTime">TEMPS RESTANT :</div>
-<button id='reset' disabled='true'>Recommencer</button>
+<?php
+    break;
+}
+?>
     
 </header>
     <table id="board"></table>
@@ -29,7 +39,7 @@
         $.ajax({
             url: 'leaderboard.php'
         }).done(function(result) {
-            $('#leaderboard').html(result);
+            document.querySelector('#leaderboard').innerHTML = result;
         });
         setTimeout("leaderboard()", 500);
     }
@@ -45,18 +55,21 @@
     function endTimer(){
         alert("LA PARTIE EST TERMINÉE !!!!!!");
         document.querySelector('#board').innerHTML = "";
+    <?php if($game_mode == "different") {?>
         var inputs = document.querySelectorAll('#difficult a');
         for (var i=0; i<inputs.length; i++) inputs[i].onclick = function(){};
+    <?php ;} ?>
     }
     
     
-    gameId=/gameId=(\d)+/.exec(document.cookie)[0];
+    var gameId=/gameId=(\d)+/.exec(document.cookie)[0];
     gameId = gameId.replace(/gameId=/, '');
     document.querySelector('title').text += gameId;
     leaderboard();
     document.querySelector('#remindTime').value = /time=\d+/.exec(window.location.href)[0].replace("time=", "");
     timer();
     
+    <?php if($game_mode == "different") {?>
     //Creation d'un tableau lors du changement de difficulté
     var inputs = document.querySelectorAll('#difficult a');
     for (var i=0; i<inputs.length; i++){
@@ -68,13 +81,15 @@
             this.className = "checked";
             document.querySelector("#reset").disabled = false;
             var difficult = this.id;
+    
             //Demande de nouvelle map
             $.ajax({
                 url: "verifMaps.php",
                 method: "POST",
                 data: {reset: true, difficult: difficult},
                 dataType: "json"
-            }).done(function(result){
+            }
+            <?php } else echo '$.post("verifMaps.php"';?>).done(function(result){
                 var xMax = result.difficult[0];
                 var yMax = result.difficult[1];
                 var board = document.querySelector('#board');
@@ -104,7 +119,7 @@
                                     method: "POST",
                                     data: {x: this.xPosition, y: this.yPosition, difficult: this.difficult},
                                     dataType: "json"
-                                }).done(function(result) {
+                                }).done(function(result){
                                     console.info(result);
                                     switch (result.initSquare){
                                         case -1:    //Quand on a perdu 
@@ -115,7 +130,7 @@
                                                     if (/[IQ].png/.test(square.src)) square.src = "img/M.png";
                                                 } else {
                                                     /F.png/.test(square.src) ? square.src = "img/NM.png" : square.onclick = function(){};
-                                                }    
+                                                }
                                             }
                                             this.src = "img/RM.png"
                                             alert("You lose !");
@@ -150,8 +165,7 @@
                     board.appendChild(row);
                 }
             });
-        };
-    }
+    <?php if($game_mode == "different") echo '};}';?>
     
     document.querySelector('#reset').onclick = function onRst(){
         $.ajax({
