@@ -19,7 +19,7 @@ include('Secure/pdo.php');
 $game_mode = $pdo->query('SELECT game_mode FROM games WHERE id='.$_COOKIE["gameId"])->fetch()[0];
 $currentMap = $pdo->query("SELECT current_map FROM game_".$_COOKIE["gameId"]." WHERE id=".$_COOKIE["playerId"])->fetch()[0];
 $gameFolder = "./games/".$_COOKIE["gameId"];
-$remindTime = $pdo->query("SELECT MINUTE(TIMEDIFF(end_time, start_time)) FROM games WHERE id=".$_COOKIE['gameId'])->fetch()[0];
+$remindTime = $pdo->query("SELECT TIMEDIFF(end_time, CURRENT_TIMESTAMP)+0 FROM games WHERE id=".$_COOKIE['gameId'])->fetch()[0];
 $pseudo = $pdo->query("SELECT pseudo FROM game_".$_COOKIE["gameId"]." WHERE id=".$_COOKIE["playerId"])->fetch()[0];
 
 switch ($_POST['difficult']){

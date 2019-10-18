@@ -1,3 +1,15 @@
+<?php
+//Initialise le programme
+include('Secure/pdo.php');
+$game_mode = $pdo->query('SELECT game_mode FROM games WHERE id='.$_COOKIE["gameId"])->fetch()[0];
+$remindTime = $pdo->query("SELECT TIMEDIFF(end_time, CURRENT_TIMESTAMP) FROM games WHERE id=".$_COOKIE['gameId'])->fetch()[0];
+//$remindTime = $pdo->query("SELECT HOUR(TIMEDIFF(end_time, CURRENT_TIMESTAMP)) MINUTE(TIMEDIFF(end_time, CURRENT_TIMESTAMP)) SECOND(TIMEDIFF(end_time, CURRENT_TIMESTAMP)) FROM games WHERE id=".$_COOKIE['gameId'])->fetch();
+if ($remindTime[0] == "-") $remindTime=0;
+else {
+    $remindTime = preg_split("/[:]/", $remindTime);
+    $remindTime = $remindTime[0]*3600 + $remindTime[1]*60 + $remindTime[2];
+}
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -12,9 +24,8 @@
 <div id="remindSquare">CASES RESTANTES : 0</div>
 <div id="remindTime">TEMPS RESTANT :</div>
 <button id='reset' disabled='true'>Recommencer</button>
+
 <?php
-include('Secure/pdo.php');
-$game_mode = $pdo->query('SELECT game_mode FROM games WHERE id='.$_COOKIE["gameId"])->fetch()[0];
 switch ($game_mode){
     case "different":
 ?>
@@ -41,7 +52,7 @@ switch ($game_mode){
         }).done(function(result) {
             document.querySelector('#leaderboard').innerHTML = result;
         });
-        //setTimeout("leaderboard()", 1500);
+        if (document.querySelector("#remindTime").value != "0") setTimeout("leaderboard()", 1500);
     }
     
     //Affiche le compte à rebours
@@ -54,6 +65,7 @@ switch ($game_mode){
     //Function qui s'active quand la partie est terminée
     function endTimer(){
         alert("LA PARTIE EST TERMINÉE !!!!!!");
+        document.querySelector('#remindTime').innerHTML = "PARTIE TERMINÉE !"
         document.querySelector('#board').innerHTML = "";
     <?php if($game_mode == "different") {?>
         var inputs = document.querySelectorAll('#difficult a');
@@ -61,13 +73,15 @@ switch ($game_mode){
     <?php ;} ?>
     }
     
-    
-    var gameId=/gameId=(\d)+/.exec(document.cookie)[0];
-    gameId = gameId.replace(/gameId=/, '');
-    document.querySelector('title').text += gameId;
-    leaderboard();
-    document.querySelector('#remindTime').value = /time=\d+/.exec(window.location.href)[0].replace("time=", "");
-    timer();
+    //Fonction qui se lance une fois que tous les éléments de la page sont chargés
+    function startGame(){
+        var gameId=/gameId=(\d)+/.exec(document.cookie)[0];
+        gameId = gameId.replace(/gameId=/, '');
+        document.querySelector('title').text += gameId;
+        leaderboard();
+        document.querySelector('#remindTime').value = <?php echo $remindTime;?>;
+        document.querySelector('#remindTime').value ? timer() : endTimer();
+    }
     
     <?php if($game_mode == "different") {?>
     //Creation d'un tableau lors du changement de difficulté
@@ -133,7 +147,7 @@ switch ($game_mode){
                                                 }
                                             }
                                             this.src = "img/RM.png"
-                                            alert("You lose !");
+                                            //alert("You lose !");
                                             break;
                                         case -2:    //Quand on a gagné
                                             for (var i=0; i<result.newValues.length; i++){
@@ -144,7 +158,7 @@ switch ($game_mode){
                                                 }
                                                 else square.src = "img/" + result.newValues[i].z + ".png";
                                             }
-                                            alert("Bravo " + result.pseudo + ", tu as gagné et en plus tu as de jolis yeux !");
+                                            //alert("Bravo " + result.pseudo + ", tu as gagné et en plus tu as de jolis yeux !");
                                             break;
                                         default:    //Partie en cours
                                             for (var i=0; i<result.initSquare; i++){
@@ -180,7 +194,8 @@ switch ($game_mode){
             document.querySelector("#reset").disabled = true;
         })
     };
-
+    
+    startGame();
     
     </script>
 </body>

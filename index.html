@@ -14,7 +14,7 @@
         <button id="join">Rejoindre un salon</button>
     </div>
     <div id="create" class="noDisplay">
-        Temps de la partie: <input type="number" id="time" value="2" min="1" max="59"/> minutes<br/>
+        Temps de la partie: <input type="number" id="time" value="2" min="1" max="1500"/> minutes<br/>
         <select id="gameMode" name="gameMode" form="gameMode">
             <option value="different">Chacun choisi sa carte</option>
             <!--<option value="same">Tout le monde possède la même carte</option>-->
@@ -43,10 +43,10 @@
                 method: "POST",
                 data: {gameId: document.querySelector("#gameId").value}
             }).done(function(result) {
-                if (!isNaN(result)) document.location.href="game.php?time=" + result*60;
+                if (!isNaN(result)) document.location.href="game.php";
                 document.querySelector('#playerList').innerHTML = result;
             });
-            setTimeout("afficherJoueur()", 500);
+            setTimeout("afficherJoueur()", 1000);
         }         
     }
     
@@ -123,17 +123,21 @@
     };
     
     document.querySelector("#start").onclick = function(){
-        var mode = document.querySelector("#gameMode").value;
         var time = document.querySelector("#time").value;
-        var data = {mode: mode, time: time}
-        switch (mode){
-            case "same":
-                data.difficultX = document.querySelector("#difficultX").value;
-                data.difficultY = document.querySelector("#difficultY").value;
-                data.mines = document.querySelector("#mines").value;
-                break;
+        if (/\D/.test(time)) alert("Le temps doit être un entier strictement positif");
+        else if (time == 0 || time>1500) alert("Le temps doit être compris entre 1 et 1500");
+        else {    
+            var mode = document.querySelector("#gameMode").value;
+            var data = {mode: mode, time: time}
+            switch (mode){
+                case "same":
+                    data.difficultX = document.querySelector("#difficultX").value;
+                    data.difficultY = document.querySelector("#difficultY").value;
+                    data.mines = document.querySelector("#mines").value;
+                    break;
+            }
+            $.post("startGame.php", data).done(function(result){});
         }
-        $.post("startGame.php", data).done(function(result){});
     }
         
     </script>
