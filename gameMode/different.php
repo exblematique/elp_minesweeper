@@ -55,7 +55,7 @@ switch ($GLOBALS['$mapMines'][$_POST['x']+$_POST['y']*$n[0]]){
         $GLOBALS['$out'] = "[";
         decouverte($_POST['x'], $_POST['y'], $n);
         $GLOBALS['$out'] = rtrim($GLOBALS['$out'], ", ");
-        $GLOBALS['$out'] .= ']';
+        $GLOBALS['$out'] .= "]";
         $GLOBALS['$casesRestantes'] ? $result = $GLOBALS['$count'] : $result = -2;
         break;
 }

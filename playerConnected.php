@@ -1,5 +1,5 @@
 <?php
-include('pdo');
+include('Secure/pdo.php');
 $sql = "SELECT pseudo FROM game_".$_COOKIE["gameId"];
 $str=$pdo->query($sql);
 if (!file_exists("games/".$_COOKIE["gameId"])){

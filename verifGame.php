@@ -1,5 +1,5 @@
 <?php
-$pdo = new PDO("mysql:host=mysql-elp.alwaysdata.net;dbname=elp_demineur", "elp", "Esaip49");
+include('Secure/pdo.php');
 
 if($_POST["create"]) {
     $idFile = fopen('lastIdGame', 'r+');

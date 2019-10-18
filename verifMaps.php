@@ -8,7 +8,7 @@
     - $GLOBALS['$addScore'] : Variable contenant le multiplicateur de score, +valeur++ à chaque case découverte
 *****
     - $pdo contient la base de données utilisée pour le programme   **********/
-include('pdo');
+include('Secure/pdo.php');
 /****
     - $game_mode : contient le nom du mode de jeu sélectionné
     - $currentMap : numéro de la carte chargée par le joueur sélectionné
@@ -20,6 +20,8 @@ $game_mode = $pdo->query('SELECT game_mode FROM games WHERE id='.$_COOKIE["gameI
 $currentMap = $pdo->query("SELECT current_map FROM game_".$_COOKIE["gameId"]." WHERE id=".$_COOKIE["playerId"])->fetch()[0];
 $gameFolder = "./games/".$_COOKIE["gameId"];
 $remindTime = $pdo->query("SELECT MINUTE(TIMEDIFF(end_time, start_time)) FROM games WHERE id=".$_COOKIE['gameId'])->fetch()[0];
+$pseudo = $pdo->query("SELECT pseudo FROM game_".$_COOKIE["gameId"]." WHERE id=".$_COOKIE["playerId"])->fetch()[0];
+
 switch ($_POST['difficult']){
     case "easy":
         $n = array(9, 9);
@@ -77,6 +79,7 @@ function decouverte($x, $y, $n){
 function fullMap($n){
     /****
         Fonction qui envoie toutes les parties de la map qui n'ont pas encore été découverte par le joueur
+        Sous le format..... [{"x":0,"y":0,"z":"-"}, ... , {"x":10,"y":10,"z":1}]
     ****/
     $out = '';
     for ($x=0; $x<$n[0]; $x++){
@@ -88,38 +91,37 @@ function fullMap($n){
         }
     }
     $out = rtrim($out, ", ");
-    return '['.$out.']';
+    return "[".$out."]";
 }
 
 /*************************************************************************************/    
 /********************************   PROGRAMME   **************************************/
 /*************************************************************************************/
+
 //S'il reste du temps, lance le script du mode de jeu selectionné sinon envoie la carte complète
 if ($remindTime > 0) {
     include('gameMode/'.$game_mode.'.php');
 
-    $pdo->query("UPDATE game_".$_COOKIE["gameId"]." SET player_map='".$GLOBALS['$playerMap']."' WHERE id=".$_COOKIE["playerId"]);
-    $pdo->query("UPDATE game_".$_COOKIE["gameId"]." SET squares_remind='".$GLOBALS['$casesRestantes']."' WHERE id=".$_COOKIE["playerId"]);
-    $pdo->query("UPDATE game_".$_COOKIE["gameId"]." SET add_score='".$GLOBALS['$addScore']."' WHERE id=".$_COOKIE["playerId"]);
-    $pdo->query("UPDATE game_".$_COOKIE["gameId"]." SET score='".$GLOBALS['$score']."' WHERE id=".$_COOKIE["playerId"]);
-    echo ('{"initSquare": '.$result.',
-            "score": '.$GLOBALS['$score'].',
-            "remindSquare": '.$GLOBALS['$casesRestantes'].',
-            ');
     if (!$GLOBALS['$casesRestantes']) {
-        echo ('"pseudo": "'.$pdo->query("SELECT pseudo FROM game_".$_COOKIE["gameId"]." WHERE id=".$_COOKIE["playerId"])->fetch()[0].'",
-            ');
         $currentMap++;
         $pdo->query("UPDATE game_".$_COOKIE["gameId"]." SET current_map=". $currentMap ." WHERE id=".$_COOKIE["playerId"]);
-        $GLOBALS['$out'] .= ', ';
+        $GLOBALS['$out'] = rtrim($GLOBALS['$out'], "]").", ";
         for ($x=0; $x<$n[0]; $x++){
             for ($y=0; $y<$n[1]; $y++){
                 if ($GLOBALS['$mapMines'][$x+$y*$n[0]] == '-') $GLOBALS['$out'] .= '{"x":'.$x.', "y":'.$y.', "z":"-"}, ';
             }
         }
-        $GLOBALS['$out'] = rtrim($GLOBALS['$out'], ", ");
+        $GLOBALS['$out'] = rtrim($GLOBALS['$out'], ", ")."]";
     }
-    echo('"newValues":'.$GLOBALS['$out'].'}');
-}
-else $GLOBALS['$out'] = fullMap($n);
+} else $GLOBALS['$out'] = fullMap($n);
+$pdo->query("UPDATE game_".$_COOKIE["gameId"]." SET player_map='".$GLOBALS['$playerMap']."' WHERE id=".$_COOKIE["playerId"]);
+$pdo->query("UPDATE game_".$_COOKIE["gameId"]." SET squares_remind='".$GLOBALS['$casesRestantes']."' WHERE id=".$_COOKIE["playerId"]);
+$pdo->query("UPDATE game_".$_COOKIE["gameId"]." SET add_score='".$GLOBALS['$addScore']."' WHERE id=".$_COOKIE["playerId"]);
+$pdo->query("UPDATE game_".$_COOKIE["gameId"]." SET score='".$GLOBALS['$score']."' WHERE id=".$_COOKIE["playerId"]);
+echo ('{"initSquare": '.$result.',
+        "pseudo":"'.$pseudo.'",
+        "score": '.$GLOBALS['$score'].',
+        "remindSquare": '.$GLOBALS['$casesRestantes'].',
+        "remindTime": '.$remindTime.',
+        "newValues":'.$GLOBALS['$out'].'}');
 ?>

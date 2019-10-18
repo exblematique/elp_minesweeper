@@ -13,7 +13,7 @@
 <div id="remindTime">TEMPS RESTANT :</div>
 <button id='reset' disabled='true'>Recommencer</button>
 <?php
-include('pdo');
+include('Secure/pdo.php');
 $game_mode = $pdo->query('SELECT game_mode FROM games WHERE id='.$_COOKIE["gameId"])->fetch()[0];
 switch ($game_mode){
     case "different":
@@ -41,7 +41,7 @@ switch ($game_mode){
         }).done(function(result) {
             document.querySelector('#leaderboard').innerHTML = result;
         });
-        setTimeout("leaderboard()", 500);
+        //setTimeout("leaderboard()", 1500);
     }
     
     //Affiche le compte à rebours

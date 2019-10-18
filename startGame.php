@@ -1,5 +1,5 @@
 <?php
-include('pdo');
+include('Secure/pdo.php');
 
 //Créer la partie lorsque le joueur host la démarre
 $gameFolder = "./games/".$_COOKIE["gameId"];

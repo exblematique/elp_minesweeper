@@ -1,5 +1,5 @@
 <?php
-include('pdo');
+include('Secure/pdo.php');
 $sql = "SELECT id, pseudo, score FROM game_".$_COOKIE["gameId"]." ORDER BY score DESC";
 $str=$pdo->query($sql);
 echo '<tr id="title"><th>Pseudo</th><th>Score</th></tr>';
